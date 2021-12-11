@@ -1,8 +1,163 @@
+diff --git a/node_modules/mysql2/index.d.ts b/node_modules/mysql2/index.d.ts
+index a465b43..183dc97 100644
+--- a/node_modules/mysql2/index.d.ts
++++ b/node_modules/mysql2/index.d.ts
+@@ -166,7 +166,6 @@ export interface ConnectionOptions extends mysql.ConnectionOptions {
+   decimalNumbers?: boolean;
+   isServer?: boolean;
+   maxPreparedStatements?: number;
+-  namedPlaceholders?: boolean;
+   nestTables?: boolean | string;
+   passwordSha1?: string;
+   pool?: any;
+diff --git a/node_modules/mysql2/lib/commands/query.js b/node_modules/mysql2/lib/commands/query.js
+index e51da3c..d9218d3 100644
+--- a/node_modules/mysql2/lib/commands/query.js
++++ b/node_modules/mysql2/lib/commands/query.js
+@@ -19,7 +19,6 @@ class Query extends Command {
+     this.sql = options.sql;
+     this.values = options.values;
+     this._queryOptions = options;
+-    this.namedPlaceholders = options.namedPlaceholders || false;
+     this.onResult = callback;
+     this.timeout = options.timeout;
+     this.queryTimeout = null;
+@@ -52,6 +51,7 @@ class Query extends Command {
+     this._connection = connection;
+     this.options = Object.assign({}, connection.config, this._queryOptions);
+     this._setTimeout();
++    this._time = process.hrtime()
+ 
+     const cmdPacket = new Packets.Query(
+       this.sql,
+@@ -73,7 +73,7 @@ class Query extends Command {
+       this.queryTimeout = null;
+     }
+     if (this.onResult) {
+-      let rows, fields;
++      let rows, fields, time;
+       if (this._resultIndex === 0) {
+         rows = this._rows[0];
+         fields = this._fields[0];
+@@ -81,13 +81,14 @@ class Query extends Command {
+         rows = this._rows;
+         fields = this._fields;
+       }
++      if (this._time) time = process.hrtime(this._time)[1] / 1000000
+       if (fields) {
+         process.nextTick(() => {
+-          this.onResult(null, rows, fields);
++          this.onResult(null, rows, fields, time);
+         });
+       } else {
+         process.nextTick(() => {
+-          this.onResult(null, rows);
++          this.onResult(null, rows, undefined, time);
+         });
+       }
+     }
+diff --git a/node_modules/mysql2/lib/connection.js b/node_modules/mysql2/lib/connection.js
+index 47970e9..a0fec80 100644
+--- a/node_modules/mysql2/lib/connection.js
++++ b/node_modules/mysql2/lib/connection.js
+@@ -27,8 +27,6 @@ const CharsetToEncoding = require('./constants/charset_encodings.js');
+ 
+ let _connectionId = 0;
+ 
+-let convertNamedPlaceholders = null;
+-
+ class Connection extends EventEmitter {
+   constructor(opts) {
+     super();
+@@ -495,7 +493,6 @@ class Connection extends EventEmitter {
+       sql: sql,
+       values: values
+     };
+-    this._resolveNamedPlaceholders(opts);
+     return SqlString.format(
+       opts.sql,
+       opts.values,
+@@ -516,23 +513,6 @@ class Connection extends EventEmitter {
+     return SqlString.raw(sql);
+   }
+ 
+-  _resolveNamedPlaceholders(options) {
+-    let unnamed;
+-    if (this.config.namedPlaceholders || options.namedPlaceholders) {
+-      if (Array.isArray(options.values)) {
+-        // if an array is provided as the values, assume the conversion is not necessary.
+-        // this allows the usage of unnamed placeholders even if the namedPlaceholders flag is enabled.
+-        return
+-      }
+-      if (convertNamedPlaceholders === null) {
+-        convertNamedPlaceholders = require('named-placeholders')();
+-      }
+-      unnamed = convertNamedPlaceholders(options.sql, options.values);
+-      options.sql = unnamed[0];
+-      options.values = unnamed[1];
+-    }
+-  }
+-
+   query(sql, values, cb) {
+     let cmdQuery;
+     if (sql.constructor === Commands.Query) {
+@@ -540,7 +520,6 @@ class Connection extends EventEmitter {
+     } else {
+       cmdQuery = Connection.createQuery(sql, values, cb, this.config);
+     }
+-    this._resolveNamedPlaceholders(cmdQuery);
+     const rawSql = this.format(cmdQuery.sql, cmdQuery.values !== undefined ? cmdQuery.values : []);
+     cmdQuery.sql = rawSql;
+     return this.addCommand(cmdQuery);
+@@ -608,26 +587,11 @@ class Connection extends EventEmitter {
+       options.sql = sql;
+       options.values = values;
+     }
+-    this._resolveNamedPlaceholders(options);
+     // check for values containing undefined
+     if (options.values) {
+-      //If namedPlaceholder is not enabled and object is passed as bind parameters
+-      if (!Array.isArray(options.values)) {
+-        throw new TypeError(
+-          'Bind parameters must be array if namedPlaceholders parameter is not enabled'
+-        );
+-      }
+       options.values.forEach(val => {
+-        //If namedPlaceholder is not enabled and object is passed as bind parameters
+-        if (!Array.isArray(options.values)) {
+-          throw new TypeError(
+-            'Bind parameters must be array if namedPlaceholders parameter is not enabled'
+-          );
+-        }
+         if (val === undefined) {
+-          throw new TypeError(
+-            'Bind parameters must not contain undefined. To pass SQL NULL specify JS null'
+-          );
++          val = null
+         }
+         if (typeof val === 'function') {
+           throw new TypeError(
 diff --git a/node_modules/mysql2/lib/connection_config.js b/node_modules/mysql2/lib/connection_config.js
-index 11ad01b..6fab74e 100644
+index 11ad01b..a4b893b 100644
 --- a/node_modules/mysql2/lib/connection_config.js
 +++ b/node_modules/mysql2/lib/connection_config.js
-@@ -187,7 +187,6 @@ class ConnectionConfig {
+@@ -27,7 +27,6 @@ const validOptions = {
+   localAddress: 1,
+   maxPreparedStatements: 1,
+   multipleStatements: 1,
+-  namedPlaceholders: 1,
+   nestTables: 1,
+   password: 1,
+   passwordSha1: 1,
+@@ -120,7 +119,6 @@ class ConnectionConfig {
+         : options.ssl || false;
+     this.multipleStatements = options.multipleStatements || false;
+     this.rowsAsArray = options.rowsAsArray || false;
+-    this.namedPlaceholders = options.namedPlaceholders || false;
+     this.nestTables =
+       options.nestTables === undefined ? undefined : options.nestTables;
+     this.typeCast = options.typeCast === undefined ? true : options.typeCast;
+@@ -187,7 +185,6 @@ class ConnectionConfig {
        'LONG_PASSWORD',
        'FOUND_ROWS',
        'LONG_FLAG',
@@ -10,7 +165,7 @@ index 11ad01b..6fab74e 100644
        'ODBC',
        'LOCAL_FILES',
        'IGNORE_SPACE',
-@@ -200,15 +199,14 @@ class ConnectionConfig {
+@@ -200,15 +197,14 @@ class ConnectionConfig {
        'TRANSACTIONS',
        'SESSION_TRACK'
      ];
@@ -45,3 +200,39 @@ index c612f66..02dbe22 100644
  
        case 'number':
          type = Types.DOUBLE;
+diff --git a/node_modules/mysql2/lib/pool.js b/node_modules/mysql2/lib/pool.js
+index 2ad4998..57d1e02 100644
+--- a/node_modules/mysql2/lib/pool.js
++++ b/node_modules/mysql2/lib/pool.js
+@@ -133,9 +133,6 @@ class Pool extends EventEmitter {
+       cb,
+       this.config.connectionConfig
+     );
+-    if (typeof cmdQuery.namedPlaceholders === 'undefined') {
+-      cmdQuery.namedPlaceholders = this.config.connectionConfig.namedPlaceholders;
+-    }
+     this.getConnection((err, conn) => {
+       if (err) {
+         if (typeof cmdQuery.onResult === 'function') {
+diff --git a/node_modules/mysql2/promise.js b/node_modules/mysql2/promise.js
+index fc74cc0..fea1ccf 100644
+--- a/node_modules/mysql2/promise.js
++++ b/node_modules/mysql2/promise.js
+@@ -4,7 +4,7 @@ const core = require('./index.js');
+ const EventEmitter = require('events').EventEmitter;
+ 
+ function makeDoneCb(resolve, reject, localErr) {
+-  return function (err, rows, fields) {
++  return function (err, rows, fields, time) {
+     if (err) {
+       localErr.message = err.message;
+       localErr.code = err.code;
+@@ -14,7 +14,7 @@ function makeDoneCb(resolve, reject, localErr) {
+       localErr.sqlMessage = err.sqlMessage;
+       reject(localErr);
+     } else {
+-      resolve([rows, fields]);
++      resolve([rows, fields, time]);
+     }
+   };
+ }

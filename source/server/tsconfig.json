@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "strict": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
+    "module": "nodenext",
+    "moduleResolution": "Node",
+    "types": ["@citizenfx/server", "@types/node"],
+    "lib": ["esnext"]
+  },
+  "include": ["./**/*.ts"],
+  "exclude": ["../../node_modules"]
+}

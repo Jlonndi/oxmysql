@@ -1,26 +1,30 @@
 {
   "name": "oxmysql",
-  "version": "1.0.0",
-  "main": "oxmysql.js",
-  "description": "node-mysql2 resource for Cfx",
-  "repository": "git@github.com:overextended/oxmysql.git",
-  "author": "dunak-debug <19434539+dunak-debug@users.noreply.github.com>",
-  "license": "GPL-3.0-or-later",
+  "version": "2.0.0",
+  "description": "FXServer to MySQL communication via node-mysql2",
+  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "build": "webpack",
-    "watch": "webpack --watch",
+    "build": "webpack --mode production",
+    "watch": "webpack --watch --mode development",
     "postinstall": "patch-package"
   },
-  "dependencies": {
-    "@citizenfx/server": "latest",
-    "mysql2": "^2.3.3",
-    "postinstall-postinstall": "^2.1.0"
-  },
+  "author": "Overextended",
+  "license": "GPL-3.0-or-later",
+  "private": true,
+  "dependencies": {},
   "devDependencies": {
-    "copy-webpack-plugin": "^10.0.0",
+    "@citizenfx/server": "^2.0.5054-1",
+    "@types/node": "^16.9.1",
+    "cardinal": "^2.1.1",
+    "clean-webpack-plugin": "^4.0.0",
+    "esbuild-loader": "^2.16.0",
+    "mysql2": "^2.3.3",
+    "node-polyfill-webpack-plugin": "^1.1.4",
     "patch-package": "^6.4.7",
-    "typescript": "^4.5.2",
-    "webpack": "^5.64.4",
+    "postinstall-postinstall": "^2.1.0",
+    "typescript": "^4.5.3",
+    "webpack": "^5.65.0",
     "webpack-cli": "^4.9.1"
   }
 }
