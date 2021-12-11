@@ -26,113 +26,11 @@ local function Await(fn, query, parameters)
 	local p = promise.new()
 	oxmysql[fn](nil, query, parameters, function(result)
 		p:resolve(result)
-	end)
+	end, GetCurrentResourceName)
 	return Citizen_Await(p)
 end
 
 MySQL = { Async = {}, Sync = {} }
-
----@param query string
----@param parameters? table|function
----@param cb? function
----@return number result
---- returns number of affected rows
-function MySQL.Async.execute(query, parameters, cb)
-	oxmysql:update(safeArgs(query, parameters, cb), GetCurrentResourceName)
-end
-
----@param query string
----@param parameters? table
----@return number result
---- returns number of affected rows
-function MySQL.Sync.execute(query, parameters)
-	return Await('update', safeArgs(query, parameters))
-end
-
----@param query string
----@param parameters? table|function
----@param cb? function
----@return table result
---- returns array of matching rows or result data
-function MySQL.Async.fetchAll(query, parameters, cb)
-	oxmysql:execute(safeArgs(query, parameters, cb), GetCurrentResourceName)
-end
-
----@param query string
----@param parameters? table
----@return table result
---- returns array of matching rows or result data
-function MySQL.Sync.fetchAll(query, parameters)
-	return Await('execute', safeArgs(query, parameters))
-end
-
----@param query string
----@param parameters? table|function
----@param cb? function
----@return any result
---- returns value of the first column of a single row
-function MySQL.Async.fetchScalar(query, parameters, cb)
-	oxmysql:scalar(safeArgs(query, parameters, cb), GetCurrentResourceName)
-end
-
----@param query string
----@param parameters? table
----@return any result
---- returns value of the first column of a single row
-function MySQL.Sync.fetchScalar(query, parameters)
-	return Await('scalar', safeArgs(query, parameters))
-end
-
----@param query string
----@param parameters? table|function
----@param cb? function
----@return table result
---- returns table containing key value pairs
-function MySQL.Async.fetchSingle(query, parameters, cb)
-	oxmysql:single(safeArgs(query, parameters, cb), GetCurrentResourceName)
-end
-
----@param query string
----@param parameters? table
----@return table result
---- returns table containing key value pairs
-function MySQL.Sync.fetchSingle(query, parameters)
-	return Await('single', safeArgs(query, parameters))
-end
-
----@param query string
----@param parameters? table|function
----@param cb? function
----@return number result
---- returns the insert id of the executed query
-function MySQL.Async.insert(query, parameters, cb)
-	oxmysql:insert(safeArgs(query, parameters, cb), GetCurrentResourceName)
-end
-
----@param query string
----@param parameters? table
----@return number result
---- returns the insert id of the executed query
-function MySQL.Sync.insert(query, parameters)
-	return Await('insert', safeArgs(query, parameters))
-end
-
----@param queries table
----@param parameters? table|function
----@param cb? function
----@return boolean result
---- returns true when the transaction has succeeded
-function MySQL.Async.transaction(queries, parameters, cb)
-	oxmysql:transaction(safeArgs(queries, parameters, cb, true), GetCurrentResourceName)
-end
-
----@param queries table
----@param parameters? table
----@return boolean result
---- returns true when the transaction has succeeded
-function MySQL.Sync.transaction(queries, parameters)	
-	return Await('transaction', safeArgs(queries, parameters, false, true))
-end
 
 ---@param query string
 ---@param cb? function
@@ -156,6 +54,114 @@ function MySQL.Sync.store(query)
 end
 
 ---@param query string
+---@param parameters? table|function
+---@param cb? function
+---@return number result
+--- returns number of affected rows
+function MySQL.Async.execute(query, parameters, cb)
+	query, parameters, cb = safeArgs(query, parameters, cb)
+	oxmysql:update(query, parameters, cb, GetCurrentResourceName)
+end
+
+---@param query string
+---@param parameters? table
+---@return number result
+--- returns number of affected rows
+function MySQL.Sync.execute(query, parameters)
+	return Await('update', safeArgs(query, parameters))
+end
+
+---@param query string
+---@param parameters? table|function
+---@param cb? function
+---@return table result
+--- returns array of matching rows or result data
+function MySQL.Async.fetchAll(query, parameters, cb)
+	query, parameters, cb = safeArgs(query, parameters, cb)
+	oxmysql:execute(query, parameters, cb, GetCurrentResourceName)
+end
+
+---@param query string
+---@param parameters? table
+---@return table result
+--- returns array of matching rows or result data
+function MySQL.Sync.fetchAll(query, parameters)
+	return Await('execute', safeArgs(query, parameters))
+end
+
+---@param query string
+---@param parameters? table|function
+---@param cb? function
+---@return any result
+--- returns value of the first column of a single row
+function MySQL.Async.fetchScalar(query, parameters, cb)
+	query, parameters, cb = safeArgs(query, parameters, cb)
+	oxmysql:scalar(query, parameters, cb, GetCurrentResourceName)
+end
+
+---@param query string
+---@param parameters? table
+---@return any result
+--- returns value of the first column of a single row
+function MySQL.Sync.fetchScalar(query, parameters)
+	return Await('scalar', safeArgs(query, parameters))
+end
+
+---@param query string
+---@param parameters? table|function
+---@param cb? function
+---@return table result
+--- returns table containing key value pairs
+function MySQL.Async.fetchSingle(query, parameters, cb)
+	query, parameters, cb = safeArgs(query, parameters, cb)
+	oxmysql:single(query, parameters, cb, GetCurrentResourceName)
+end
+
+---@param query string
+---@param parameters? table
+---@return table result
+--- returns table containing key value pairs
+function MySQL.Sync.fetchSingle(query, parameters)
+	return Await('single', safeArgs(query, parameters))
+end
+
+---@param query string
+---@param parameters? table|function
+---@param cb? function
+---@return number result
+--- returns the insert id of the executed query
+function MySQL.Async.insert(query, parameters, cb)
+	query, parameters, cb = safeArgs(query, parameters, cb)
+	oxmysql:insert(query, parameters, cb, GetCurrentResourceName)
+end
+
+---@param query string
+---@param parameters? table
+---@return number result
+--- returns the insert id of the executed query
+function MySQL.Sync.insert(query, parameters)
+	return Await('insert', safeArgs(query, parameters))
+end
+
+---@param queries table
+---@param parameters? table|function
+---@param cb? function
+---@return boolean result
+--- returns true when the transaction has succeeded
+function MySQL.Async.transaction(queries, parameters, cb)
+	queries, parameters, cb = safeArgs(queries, parameters, cb, true)
+	oxmysql:transaction(queries, parameters, cb, GetCurrentResourceName)
+end
+
+---@param queries table
+---@param parameters? table
+---@return boolean result
+--- returns true when the transaction has succeeded
+function MySQL.Sync.transaction(queries, parameters)	
+	return Await('transaction', safeArgs(queries, parameters, false, true))
+end
+
+---@param query string
 ---@param parameters table|function
 ---@param cb? function
 ---@return any result
@@ -166,7 +172,7 @@ end
 --- ````
 --- When selecting a single row the result will match fetchSingle, or a single column will match fetchScalar.
 function MySQL.Async.prepare(query, parameters, cb)
-	oxmysql:prepare(query, parameters, cb), GetCurrentResourceName)
+	oxmysql:prepare(query, parameters, cb, GetCurrentResourceName)
 end
 
 ---@param query string
@@ -190,7 +196,7 @@ function MySQL.ready(cb)
 	CreateThread(function()
 		repeat
 			Wait(50)
-		until GetResourceState('oxmysqlmysql') == 'started'
+		until GetResourceState('oxmysql') == 'started'
 		cb()
 	end)
 end
