@@ -1,5 +1,6 @@
 import { _query } from './db/query';
 import { _execute } from './db/execute';
+import { _transaction } from './db/transaction';
 import { speedtest } from './db/test';
 
 global.exports('execute', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {
@@ -40,6 +41,14 @@ global.exports('insert', (query: string, parameters: any, cb: Function, invoking
 
 global.exports('insertSync', (query: string, parameters: any, invokingResource = GetInvokingResource()) => {
   return _query('insert', invokingResource, query, parameters);
+});
+
+global.exports('transaction', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {
+  _transaction(invokingResource, query, parameters, cb);
+});
+
+global.exports('transactionSync', (query: string, parameters: any, invokingResource = GetInvokingResource()) => {
+  return _transaction(invokingResource, query, parameters);
 });
 
 global.exports('prepare', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {

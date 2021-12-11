@@ -10,14 +10,13 @@ const transactionError = (queries: any, parameters: any) =>
     )
     .join('\n')}\n${JSON.stringify(parameters)}`;
 
-export const _transaction = async (invokingResource: string, queries: string, parameters: [], cb: Function) => {
+export const _transaction = async (invokingResource: string, queries: string, parameters: any, cb?: Function) => {
   if (!isReady) serverReady();
   const parsedQuery = parseTransaction(invokingResource, queries, parameters);
   scheduleTick();
   const connection = await pool.getConnection();
   try {
-    let queryCount = parameters.length;
-    let results = [];
+    let queryCount = parsedQuery.length;
     let executionTime = process.hrtime();
 
     await connection.beginTransaction();
@@ -39,10 +38,12 @@ export const _transaction = async (invokingResource: string, queries: string, pa
         )}^0`
       );
 
+    if (parameters && typeof parameters === 'function') cb = parameters;
+
     if (cb) {
-      cb(results);
+      cb(true);
     } else {
-      return results;
+      return true;
     }
   } catch (error) {
     await connection.rollback();
@@ -51,6 +52,7 @@ export const _transaction = async (invokingResource: string, queries: string, pa
             ${error.message}
             ${error.sql || `${transactionError(queries, parameters)}`}^0`
     );
+    return false;
   } finally {
     connection.release();
   }
