@@ -17,9 +17,9 @@ local function safeArgs(query, parameters, cb, transaction)
 	return query, parameters, cb
 end
 
+local promise = promise
 local oxmysql = exports.oxmysql
 local GetCurrentResourceName = GetCurrentResourceName()
-local promise = promise
 local Citizen_Await = Citizen.Await
 
 local function Await(fn, query, parameters)
@@ -30,7 +30,11 @@ local function Await(fn, query, parameters)
 	return Citizen_Await(p)
 end
 
-MySQL = { Async = {}, Sync = {} }
+local MySQL = {}
+--- Results will be returned to a callback function without halting the execution of the current thread.
+MySQL.Async = {}
+--- The current thread will yield until the query has resolved, returning results to a variable.
+MySQL.Sync = {}
 
 ---@param query string
 ---@param cb? function
@@ -168,7 +172,7 @@ end
 --- Utilises a separate function to execute queries more efficiently. The return type will differ based on the query submitted.  
 --- Parameters must be provided as an array of tables, ie.  
 --- ```lua
---- MySQL.Async.prepare('SELECT * FROM users WHERE lastname = ?', {{'Dunak'}, {'Linden'}, {'Luke'})
+--- MySQL.Async.prepare('SELECT * FROM users WHERE lastname = ?', {{'Dunak'}, {'Linden'}, {'Luke'}})
 --- ````
 --- When selecting a single row the result will match fetchSingle, or a single column will match fetchScalar.
 function MySQL.Async.prepare(query, parameters, cb)
@@ -181,15 +185,11 @@ end
 --- Utilises a separate function to execute queries more efficiently. The return type will differ based on the query submitted.  
 --- Parameters must be provided as an array of tables, ie.  
 --- ```lua
---- MySQL.Sync.prepare('SELECT * FROM users WHERE lastname = ?', {{'Dunak'}, {'Linden'}, {'Luke'})
+--- MySQL.Sync.prepare('SELECT * FROM users WHERE lastname = ?', {{'Dunak'}, {'Linden'}, {'Luke'}})
 --- ````
 --- When selecting a single row the result will match fetchSingle, or a single column will match fetchScalar.
 function MySQL.Sync.prepare(query, parameters)
-	local p = promise.new()
-	oxmysql:prepare(query, parameters, function(result)
-		p:resolve(result)
-	end, GetCurrentResourceName)
-	return Citizen.Await(p)
+	return Await('prepare', safeArgs(query, parameters))
 end
 
 function MySQL.ready(cb)
@@ -200,3 +200,5 @@ function MySQL.ready(cb)
 		cb()
 	end)
 end
+
+_ENV.MySQL = MySQL
