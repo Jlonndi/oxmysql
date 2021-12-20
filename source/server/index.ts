@@ -1,7 +1,7 @@
-import { _query } from './db/query';
-import { _execute } from './db/execute';
-import { _transaction } from './db/transaction';
-import { speedtest } from './db/test';
+import _execute from './db/execute';
+import _query from './db/query';
+import speedtest from './db/test';
+import _transaction from './db/transaction';
 
 global.exports('execute', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {
   _query('execute', invokingResource, query, parameters, cb);

@@ -1,11 +1,5 @@
 import { createPool } from 'mysql2/promise';
-import {
-  resourceName,
-  mysql_connection_string,
-  mysql_debug,
-  mysql_slow_query_warning,
-  mysql_transaction_isolation_level,
-} from '../config';
+import { mysql_connection_string, mysql_transaction_isolation_level } from '../config';
 import { typeCast } from './types';
 
 const connectionString = (() => {
@@ -29,7 +23,6 @@ const connectionString = (() => {
 const pool = createPool({
   typeCast: typeCast,
   connectTimeout: 60000,
-  multipleStatements: false,
   ...connectionString,
 });
 

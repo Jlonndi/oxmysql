@@ -10,7 +10,7 @@ const _query = async (query: string, parameters?: Object) => {
   }
 };
 
-export const speedtest = async () => {
+export default async () => {
   const val = 10000;
   const queryTimesLocal = [];
   let result;

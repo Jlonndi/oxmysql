@@ -1,9 +1,9 @@
-import { scheduleTick, parseArguments, isReady, serverReady } from '../utils';
 import { mysql_debug, mysql_slow_query_warning } from '../config';
-import { response } from './types';
+import { isReady, parseArguments, scheduleTick, serverReady } from '../utils';
 import pool from './pool';
+import { response } from './types';
 
-export const _query = async (type: string, invokingResource: string, query: string, parameters?: [], cb?: Function) => {
+export default async (type: string, invokingResource: string, query: string, parameters?: [], cb?: Function) => {
   if (!isReady) serverReady();
   [query, parameters, cb] = parseArguments(invokingResource, query, parameters, cb);
   scheduleTick();

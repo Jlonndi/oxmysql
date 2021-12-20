@@ -1,7 +1,7 @@
 import { mysql_debug, mysql_slow_query_warning } from '../config';
 import { isReady, parseTransaction, scheduleTick, serverReady } from '../utils';
 import pool from './pool';
-const process = require('process');
+const hrtime = require('process').hrtime;
 
 const transactionError = (queries: any, parameters: any) =>
   `${queries
@@ -10,14 +10,14 @@ const transactionError = (queries: any, parameters: any) =>
     )
     .join('\n')}\n${JSON.stringify(parameters)}`;
 
-export const _transaction = async (invokingResource: string, queries: string, parameters: any, cb?: Function) => {
+export default async (invokingResource: string, queries: string, parameters: any, cb?: Function) => {
   if (!isReady) serverReady();
   const parsedQuery = parseTransaction(invokingResource, queries, parameters);
   scheduleTick();
   const connection = await pool.getConnection();
   try {
     let queryCount = parsedQuery.length;
-    let executionTime = process.hrtime();
+    let executionTime = hrtime() as any;
 
     await connection.beginTransaction();
 
@@ -27,7 +27,7 @@ export const _transaction = async (invokingResource: string, queries: string, pa
 
     await connection.commit();
 
-    executionTime = process.hrtime(executionTime)[1] / 1000000;
+    executionTime = hrtime(executionTime)[1] / 1000000;
     if (executionTime >= mysql_slow_query_warning || mysql_debug)
       console.log(
         `^3[${
