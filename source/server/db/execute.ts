@@ -12,13 +12,18 @@ export default async (invokingResource: string, query: string, parameters?: any[
   scheduleTick();
   const connection = await pool.getConnection();
   try {
-    let queryCount = parameters.length;
+    const queryCount = parameters.length;
     let results = [];
     let executionTime = hrtime() as any;
 
-    for (let i = 0; i < queryCount; i++) {
-      const [result] = (await connection.execute(query, parameters[i])) as any;
-      results[i] = response(type, result);
+    if (typeof parameters[0] !== 'object') {
+      const [result] = (await connection.execute(query, parameters)) as any;
+      results[0] = response(type, result);
+    } else {
+      for (let i = 0; i < queryCount; i++) {
+        const [result] = (await connection.execute(query, parameters[i])) as any;
+        results[i] = response(type, result);
+      }
     }
 
     executionTime = hrtime(executionTime)[1] / 1000000;
