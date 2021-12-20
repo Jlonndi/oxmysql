@@ -166,13 +166,14 @@ function MySQL.Sync.transaction(queries, parameters)
 end
 
 ---@param query string
----@param parameters table|function
+---@param parameters table
 ---@param cb? function
 ---@return any result
 --- Utilises a separate function to execute queries more efficiently. The return type will differ based on the query submitted.  
---- Parameters must be provided as an array of tables, ie.  
+--- Parameters can be a single table containing placeholders (perform one query) or contain multiple tables with a set of placeholders, i.e
 --- ```lua
---- MySQL.Async.prepare('SELECT * FROM users WHERE lastname = ?', {{'Dunak'}, {'Linden'}, {'Luke'}})
+--- MySQL.Async.prepare('SELECT * FROM users WHERE firstname = ?', {{'Dunak'}, {'Linden'}, {'Luke'}})
+--- MySQL.Async.prepare('SELECT * FROM users WHERE firstname = ?', {'Linden'})
 --- ````
 --- When selecting a single row the result will match fetchSingle, or a single column will match fetchScalar.
 function MySQL.Async.prepare(query, parameters, cb)
@@ -180,12 +181,13 @@ function MySQL.Async.prepare(query, parameters, cb)
 end
 
 ---@param query string
----@param parameters table|function
+---@param parameters table
 ---@return any result
 --- Utilises a separate function to execute queries more efficiently. The return type will differ based on the query submitted.  
---- Parameters must be provided as an array of tables, ie.  
+--- Parameters can be a single table containing placeholders (perform one query) or contain multiple tables with a set of placeholders, i.e
 --- ```lua
---- MySQL.Sync.prepare('SELECT * FROM users WHERE lastname = ?', {{'Dunak'}, {'Linden'}, {'Luke'}})
+--- MySQL.Sync.prepare('SELECT * FROM users WHERE firstname = ?', {{'Dunak'}, {'Linden'}, {'Luke'}})
+--- MySQL.Sync.prepare('SELECT * FROM users WHERE firstname = ?', {'Linden'})
 --- ````
 --- When selecting a single row the result will match fetchSingle, or a single column will match fetchScalar.
 function MySQL.Sync.prepare(query, parameters)
