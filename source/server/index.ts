@@ -1,62 +1,61 @@
-import _execute from './db/execute';
-import _query from './db/query';
-import speedtest from './db/test';
-import _transaction from './db/transaction';
+import sql_execute from './db/execute';
+import sql_query from './db/query';
+import sql_transaction from './db/transaction';
+require('./db/test');
+require('./deprecated');
 
-global.exports('execute', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {
-  _query('execute', invokingResource, query, parameters, cb);
+global.exports('query_callback', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {
+  sql_query('', invokingResource, query, parameters, cb);
 });
 
-global.exports('executeSync', (query: string, parameters: any, invokingResource = GetInvokingResource()) => {
-  return _query('execute', invokingResource, query, parameters);
+global.exports('query_async', (query: string, parameters: any, invokingResource = GetInvokingResource()) => {
+  return sql_query('', invokingResource, query, parameters);
 });
 
-global.exports('single', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {
-  _query('single', invokingResource, query, parameters, cb);
+global.exports('single_callback', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {
+  sql_query('single', invokingResource, query, parameters, cb);
 });
 
-global.exports('singleSync', (query: string, parameters: any, invokingResource = GetInvokingResource()) => {
-  return _query('single', invokingResource, query, parameters);
+global.exports('single_async', (query: string, parameters: any, invokingResource = GetInvokingResource()) => {
+  return sql_query('single', invokingResource, query, parameters);
 });
 
-global.exports('scalar', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {
-  _query('scalar', invokingResource, query, parameters, cb);
+global.exports('scalar_callback', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {
+  sql_query('scalar', invokingResource, query, parameters, cb);
 });
 
-global.exports('scalarSync', (query: string, parameters: any, invokingResource = GetInvokingResource()) => {
-  return _query('scalar', invokingResource, query, parameters);
+global.exports('scalar_async', (query: string, parameters: any, invokingResource = GetInvokingResource()) => {
+  return sql_query('scalar', invokingResource, query, parameters);
 });
 
-global.exports('update', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {
-  _query('update', invokingResource, query, parameters, cb);
+global.exports('update_callback', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {
+  sql_query('update', invokingResource, query, parameters, cb);
 });
 
-global.exports('updateSync', (query: string, parameters: any, invokingResource = GetInvokingResource()) => {
-  return _query('update', invokingResource, query, parameters);
+global.exports('update_async', (query: string, parameters: any, invokingResource = GetInvokingResource()) => {
+  return sql_query('update', invokingResource, query, parameters);
 });
 
-global.exports('insert', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {
-  _query('insert', invokingResource, query, parameters, cb);
+global.exports('insert_callback', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {
+  sql_query('insert', invokingResource, query, parameters, cb);
 });
 
-global.exports('insertSync', (query: string, parameters: any, invokingResource = GetInvokingResource()) => {
-  return _query('insert', invokingResource, query, parameters);
+global.exports('insert_async', (query: string, parameters: any, invokingResource = GetInvokingResource()) => {
+  return sql_query('insert', invokingResource, query, parameters);
 });
 
-global.exports('transaction', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {
-  _transaction(invokingResource, query, parameters, cb);
+global.exports('transaction_callback', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {
+  sql_transaction(invokingResource, query, parameters, cb);
 });
 
-global.exports('transactionSync', (query: string, parameters: any, invokingResource = GetInvokingResource()) => {
-  return _transaction(invokingResource, query, parameters);
+global.exports('transaction_async', (query: string, parameters: any, invokingResource = GetInvokingResource()) => {
+  return sql_transaction(invokingResource, query, parameters);
 });
 
-global.exports('prepare', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {
-  _execute(invokingResource, query, parameters, cb);
+global.exports('execute_callback', (query: string, parameters: any, cb: Function, invokingResource = GetInvokingResource()) => {
+  sql_execute(invokingResource, query, parameters, cb);
 });
 
-global.exports('prepareSync', (query: string, parameters: any, invokingResource = GetInvokingResource()) => {
-  return _execute(invokingResource, query, parameters);
+global.exports('execute_async', (query: string, parameters: any, invokingResource = GetInvokingResource()) => {
+  return sql_execute(invokingResource, query, parameters);
 });
-
-RegisterCommand('sql_speedtest', speedtest, true);

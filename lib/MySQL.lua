@@ -1,3 +1,9 @@
+-- lib/MySQL.lua provides complete compatibility for resources using mysql-async functions
+-- As of v2.0.0 this is the preferred method of interacting with oxmysql
+-- * Though some function names are not 100% accurate, mysql-async provides a "standard" (for better or worse)
+-- * Using this lib provides minor improvements to performance and helps debug poor queries
+-- * Resources are not bound to using oxmysql where the user may prefer another option (compatibility libraries are common)
+
 local Store = {}
 
 local function safeArgs(query, parameters, cb, transaction)
@@ -24,7 +30,7 @@ local Citizen_Await = Citizen.Await
 
 local function Await(fn, query, parameters)
 	local p = promise.new()
-	oxmysql[fn](nil, query, parameters, function(result)
+	fn(nil, query, parameters, function(result)
 		p:resolve(result)
 	end, GetCurrentResourceName)
 	return Citizen_Await(p)
@@ -64,7 +70,7 @@ end
 --- returns number of affected rows
 function MySQL.Async.execute(query, parameters, cb)
 	query, parameters, cb = safeArgs(query, parameters, cb)
-	oxmysql:update(query, parameters, cb, GetCurrentResourceName)
+	oxmysql:update_callback(query, parameters, cb, GetCurrentResourceName)
 end
 
 ---@param query string
@@ -72,7 +78,7 @@ end
 ---@return number result
 --- returns number of affected rows
 function MySQL.Sync.execute(query, parameters)
-	return Await('update', safeArgs(query, parameters))
+	return Await(oxmysql.update_callback, safeArgs(query, parameters))
 end
 
 ---@param query string
@@ -82,7 +88,7 @@ end
 --- returns array of matching rows or result data
 function MySQL.Async.fetchAll(query, parameters, cb)
 	query, parameters, cb = safeArgs(query, parameters, cb)
-	oxmysql:execute(query, parameters, cb, GetCurrentResourceName)
+	oxmysql:query_callback(query, parameters, cb, GetCurrentResourceName)
 end
 
 ---@param query string
@@ -90,7 +96,7 @@ end
 ---@return table result
 --- returns array of matching rows or result data
 function MySQL.Sync.fetchAll(query, parameters)
-	return Await('execute', safeArgs(query, parameters))
+	return Await(oxmysql.query_callback, safeArgs(query, parameters))
 end
 
 ---@param query string
@@ -100,7 +106,7 @@ end
 --- returns value of the first column of a single row
 function MySQL.Async.fetchScalar(query, parameters, cb)
 	query, parameters, cb = safeArgs(query, parameters, cb)
-	oxmysql:scalar(query, parameters, cb, GetCurrentResourceName)
+	oxmysql:scalar_callback(query, parameters, cb, GetCurrentResourceName)
 end
 
 ---@param query string
@@ -108,7 +114,7 @@ end
 ---@return any result
 --- returns value of the first column of a single row
 function MySQL.Sync.fetchScalar(query, parameters)
-	return Await('scalar', safeArgs(query, parameters))
+	return Await(oxmysql.scalar_callback, safeArgs(query, parameters))
 end
 
 ---@param query string
@@ -118,7 +124,7 @@ end
 --- returns table containing key value pairs
 function MySQL.Async.fetchSingle(query, parameters, cb)
 	query, parameters, cb = safeArgs(query, parameters, cb)
-	oxmysql:single(query, parameters, cb, GetCurrentResourceName)
+	oxmysql:single_callback(query, parameters, cb, GetCurrentResourceName)
 end
 
 ---@param query string
@@ -126,7 +132,7 @@ end
 ---@return table result
 --- returns table containing key value pairs
 function MySQL.Sync.fetchSingle(query, parameters)
-	return Await('single', safeArgs(query, parameters))
+	return Await(oxmysql.single_callback, safeArgs(query, parameters))
 end
 
 ---@param query string
@@ -136,7 +142,7 @@ end
 --- returns the insert id of the executed query
 function MySQL.Async.insert(query, parameters, cb)
 	query, parameters, cb = safeArgs(query, parameters, cb)
-	oxmysql:insert(query, parameters, cb, GetCurrentResourceName)
+	oxmysql:insert_callback(query, parameters, cb, GetCurrentResourceName)
 end
 
 ---@param query string
@@ -144,7 +150,7 @@ end
 ---@return number result
 --- returns the insert id of the executed query
 function MySQL.Sync.insert(query, parameters)
-	return Await('insert', safeArgs(query, parameters))
+	return Await(oxmysql.insert_callback, safeArgs(query, parameters))
 end
 
 ---@param queries table
@@ -154,15 +160,15 @@ end
 --- returns true when the transaction has succeeded
 function MySQL.Async.transaction(queries, parameters, cb)
 	queries, parameters, cb = safeArgs(queries, parameters, cb, true)
-	oxmysql:transaction(queries, parameters, cb, GetCurrentResourceName)
+	oxmysql:transaction_callback(queries, parameters, cb, GetCurrentResourceName)
 end
 
 ---@param queries table
 ---@param parameters? table
 ---@return boolean result
 --- returns true when the transaction has succeeded
-function MySQL.Sync.transaction(queries, parameters)	
-	return Await('transaction', safeArgs(queries, parameters, false, true))
+function MySQL.Sync.transaction(queries, parameters)
+	return Await(oxmysql.transaction_callback, safeArgs(queries, parameters, false, true))
 end
 
 ---@param query string
@@ -177,7 +183,7 @@ end
 --- ````
 --- When selecting a single row the result will match fetchSingle, or a single column will match fetchScalar.
 function MySQL.Async.prepare(query, parameters, cb)
-	oxmysql:prepare(query, parameters, cb, GetCurrentResourceName)
+	oxmysql:execute_callback(query, parameters, cb, GetCurrentResourceName)
 end
 
 ---@param query string
@@ -191,7 +197,7 @@ end
 --- ````
 --- When selecting a single row the result will match fetchSingle, or a single column will match fetchScalar.
 function MySQL.Sync.prepare(query, parameters)
-	return Await('prepare', safeArgs(query, parameters))
+	return Await(oxmysql.execute_callback, safeArgs(query, parameters))
 end
 
 function MySQL.ready(cb)

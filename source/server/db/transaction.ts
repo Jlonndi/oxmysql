@@ -5,9 +5,7 @@ const hrtime = require('process').hrtime;
 
 const transactionError = (queries: any, parameters: any) =>
   `${queries
-    .map((query) =>
-      typeof query === 'string' ? query : `${query.query} ${JSON.stringify(query.values || query.parameters || [])}`
-    )
+    .map((query) => (typeof query === 'string' ? query : `${query.query} ${JSON.stringify(query.values || query.parameters || [])}`))
     .join('\n')}\n${JSON.stringify(parameters)}`;
 
 export default async (invokingResource: string, queries: string, parameters: any, cb?: Function) => {
@@ -30,9 +28,7 @@ export default async (invokingResource: string, queries: string, parameters: any
     executionTime = hrtime(executionTime)[1] / 1000000;
     if (executionTime >= mysql_slow_query_warning || mysql_debug)
       console.log(
-        `^3[${
-          mysql_debug ? 'DEBUG' : 'WARNING'
-        }] ${invokingResource} took ${executionTime}ms to execute a transaction!\n${transactionError(
+        `^3[${mysql_debug ? 'DEBUG' : 'WARNING'}] ${invokingResource} took ${executionTime}ms to execute a transaction!\n${transactionError(
           queries,
           parameters
         )}^0`
